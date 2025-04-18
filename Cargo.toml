@@ -1,0 +1,13 @@
+[package]
+name = "file-encrypt-decrypt"
+version = "0.1.0"
+edition = "2024"
+authors = ["Ronan Shaughnessy"]
+
+[dependencies]
+rand = "0.8"
+aes = "0.8"
+aes-gcm = "0.10"
+chacha20poly1305 = "0.10"
+aead = "0.5"
+hex = "0.4"
