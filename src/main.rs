@@ -34,13 +34,28 @@ fn main() {
             let ciphertext = encryptor.encrypt(&data);
             println!("Encrypted {} bytes", ciphertext.len());
 
-            let cipher_method = if rng.gen_bool(0.5) { "AES-GCM" } else { "ChaCha20" };
-            FileHandler::save_to_file("cipher_method.txt", cipher_method.as_bytes()).expect("Failed to save cipher method");
-
             FileHandler::save_to_file("encrypted_data.bin", &ciphertext).expect("Failed to save encrypted data");
             println!("Encrypted file saved successfully");
         },
         2 => {
+            println!("Cipher Method (AES-GCM or ChaCha20)");
+            let mut cipher_input = String::new();
+            io::stdin().read_line(&mut cipher_input).expect("Failed to read cipher input");
+            let cipher_method = cipher_input.trim();
+            
+            if cipher_method != "AES-GCM" && cipher_method != "ChaCha20" {
+                println!("Cipher method must be AES-GCM or ChaCha20.");
+                return;
+            }
+
+            let decryptor: Box<dyn Decryptor> = if cipher_method == "AES-GCM" {
+                println!("Decryption method: AES-GCM");
+                Box::new(AesGcmDecryptor)
+            } else {
+                println!("Decryption method: ChaCha20");
+                Box::new(ChaCha20Decryptor)
+            };
+
             println!("Enter the key (in hex):");
             let mut key_input = String::new();
             io::stdin().read_line(&mut key_input).expect("Failed to read key input");
@@ -52,17 +67,6 @@ fn main() {
             let nonce = hex::decode(nonce_input.trim()).expect("Invalid nonce format");
 
             let encrypted_data = FileHandler::read_file("encrypted_data.bin").expect("Failed to read encrypted file");
-
-            let cipher_method = FileHandler::read_file("cipher_method.txt").expect("Failed to read cipher method");
-            let cipher_method = String::from_utf8(cipher_method).expect("Invalid cipher method format");
-
-            let decryptor: Box<dyn Decryptor> = if cipher_method == "AES-GCM" {
-                println!("Decryption method: AES-GCM");
-                Box::new(AesGcmDecryptor)
-            } else {
-                println!("Decryption method: ChaCha20");
-                Box::new(ChaCha20Decryptor)
-            };
 
             match decryptor.decrypt(&key, &nonce, &encrypted_data) {
                 Ok(decrypted_data) => {
